@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import GROQ_API_KEY, SUPABASE_URL, SUPABASE_KEY
+from routers.generate import router as generate_router
 
 app = FastAPI(
     title="API Test Gen",
@@ -11,13 +12,13 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-#include the routers
-app.include_router(generate.router)
+# Include the routers
+app.include_router(generate_router)
 
 @app.get("/")
 def root():

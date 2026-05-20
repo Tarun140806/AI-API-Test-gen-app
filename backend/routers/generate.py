@@ -22,11 +22,13 @@ async def generate(request: GenerateRequest):
         test_run_id = test_run["id"]
 
         # Step 2 — Call Groq AI to generate test cases
-        test_cases = generate_test_cases(
+        generation_result = generate_test_cases(
             request.api_url,
             request.method,
             request.description
         )
+        test_cases = generation_result["test_cases"]
+        source = generation_result["source"]
 
         # Step 3 — Save all generated test cases to database
         saved_cases = save_test_cases(test_run_id, test_cases)
@@ -37,6 +39,7 @@ async def generate(request: GenerateRequest):
             "test_run_id": test_run_id,
             "api_url": request.api_url,
             "method": request.method,
+            "source": source,
             "total_cases": len(test_cases),
             "test_cases": test_cases
         }
