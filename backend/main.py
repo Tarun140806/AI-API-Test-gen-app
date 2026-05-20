@@ -16,6 +16,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+#include the routers
+app.include_router(generate.router)
+
 @app.get("/")
 def root():
     return {"message": "AI API Test Generator is running"}
