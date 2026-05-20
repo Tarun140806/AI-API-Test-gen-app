@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from config import GROQ_API_KEY, SUPABASE_URL, SUPABASE_KEY
 
 app = FastAPI(
     title="API Test Gen",
