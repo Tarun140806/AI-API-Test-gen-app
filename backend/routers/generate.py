@@ -31,7 +31,7 @@ async def generate(request: GenerateRequest):
         source = generation_result["source"]
 
         # Step 3 — Save all generated test cases to database
-        saved_cases = save_test_cases(test_run_id, test_cases)
+        saved_cases = save_test_cases(test_run_id, test_cases, request.method)
 
         # Step 4 — Return everything to frontend
         return {
