@@ -89,8 +89,8 @@ Rules:
 
 Test cases to cover:
 1. Happy path - valid request
-2. Missing required fields
-3. Invalid data types
+2. Missing required fields (expect 400 or 422)
+3. Invalid data types (expect 422 for FastAPI validation errors, 400 for custom validation)
 4. Unauthorized - no auth header
 5. Edge case - empty strings or zero values
 6. Large input - body with a 50 character string

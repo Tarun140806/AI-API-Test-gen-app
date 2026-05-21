@@ -11,6 +11,11 @@ def _parse_request_payload(test_case: dict) -> Tuple[Dict, Optional[Any]]:
         return stored.get("headers") or {}, stored.get("body")
     return test_case.get("headers") or {}, stored
 
+def status_matches(actual: int, expected: int) -> bool:
+    validation_errors = {400, 422}
+    if actual in validation_errors and expected in validation_errors:
+        return True
+    return actual == expected
 
 async def run_test_cases(test_run_id: str, api_url: str):
     """
@@ -41,7 +46,7 @@ async def run_test_cases(test_run_id: str, api_url: str):
                 expected_status = tc.get("expected_status")
                 if expected_status is not None:
                     expected_status = int(expected_status)
-                passed = actual_status == expected_status
+                passed = status_matches(actual_status, expected_status)
 
                 # Update result in Supabase
                 update_test_case_result(tc["id"], actual_status, passed)
