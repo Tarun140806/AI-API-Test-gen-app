@@ -18,11 +18,7 @@ export function TestRunnerPage() {
   const handleGenerateTests = async (url: string, method: HTTPMethod, description: string) => {
     setIsGenerating(true);
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const testCases = generateMockTestCases(url, method);
-
+      const testCases = await generateMockTestCases(url, method, description);
       const newRun: TestRun = {
         id: `run-${Date.now()}`,
         url,
@@ -35,8 +31,11 @@ export function TestRunnerPage() {
         failed: 0,
         total: testCases.length,
       };
-
+  
       setCurrentTestRun(newRun);
+    } catch (error) {
+      alert('Failed to generate test cases. Make sure your backend is running.');
+      console.error(error);
     } finally {
       setIsGenerating(false);
     }
@@ -44,24 +43,27 @@ export function TestRunnerPage() {
 
   const handleRunAllTests = async () => {
     if (!currentTestRun) return;
-
+  
     setIsRunning(true);
     try {
       const results = await executeTestCases(currentTestRun.testCases, currentTestRun.url);
-
+  
       const passed = results.filter((r) => r.passed).length;
       const failed = results.filter((r) => !r.passed).length;
-
+  
       const updatedRun: TestRun = {
         ...currentTestRun,
         results,
         passed,
         failed,
       };
-
+  
       setCurrentTestRun(updatedRun);
       setCurrentRun(updatedRun);
       addToHistory(updatedRun);
+    } catch (error) {
+      alert('Failed to run tests. Make sure your backend is running.');
+      console.error(error);
     } finally {
       setIsRunning(false);
     }
