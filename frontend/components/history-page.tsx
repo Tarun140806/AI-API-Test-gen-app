@@ -1,23 +1,43 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { TestRun } from '@/lib/types';
-import { useTestRun } from '@/lib/test-run-context';
 import { MethodBadge } from './method-badge';
-import { StatusBadge } from './status-badge';
-import { TestResultCard } from './test-result-card';
-import { ChevronDown, Trash2 } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import { fetchHistory } from '@/lib/mock-api';
 
 export function HistoryPage() {
   const router = useRouter();
-  const { history, deleteHistoryItem } = useTestRun();
+  const [history, setHistory] = useState<any[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const formatDate = (date: Date) => {
-    const d = new Date(date);
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const data = await fetchHistory();
+        setHistory(data);
+      } catch (error) {
+        console.error('Failed to fetch history:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadHistory();
+  }, []);
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
     return d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Loading history...</div>
+      </div>
+    );
+  }
 
   if (history.length === 0) {
     return (
@@ -44,46 +64,43 @@ export function HistoryPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-6 py-12">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Test History</h1>
-          <p className="text-muted-foreground">View past test runs and their results</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Test History</h1>
+            <p className="text-muted-foreground">View past test runs and their results</p>
+          </div>
+          <button
+            onClick={() => { setLoading(true); fetchHistory().then(setHistory).finally(() => setLoading(false)); }}
+            className="text-sm text-purple-400 hover:text-purple-300 border border-purple-400/30 px-3 py-1 rounded-lg transition-colors"
+          >
+            Refresh
+          </button>
         </div>
 
-        {/* History List */}
         <div className="space-y-4">
           {history.map((run) => {
-            const isExpanded = expandedId === run.id;
+            const isExpanded = expandedId === run.test_run_id;
             const passPercentage = run.total > 0 ? (run.passed / run.total) * 100 : 0;
 
             return (
-              <div key={run.id} className="backdrop-blur-md border border-border rounded-lg overflow-hidden" style={{ backgroundColor: 'rgb(18 18 26 / 0.8)' }}>
-                {/* Summary Row */}
+              <div key={run.test_run_id} className="backdrop-blur-md border border-border rounded-lg overflow-hidden" style={{ backgroundColor: 'rgb(18 18 26 / 0.8)' }}>
                 <button
-                  onClick={() => setExpandedId(isExpanded ? null : run.id)}
+                  onClick={() => setExpandedId(isExpanded ? null : run.test_run_id)}
                   className="w-full p-4 flex items-center justify-between gap-4 hover:bg-card/50 transition-colors"
                 >
                   <div className="flex items-start gap-4 flex-1 min-w-0">
                     <ChevronDown
                       size={20}
-                      className={`text-muted-foreground flex-shrink-0 mt-1 transition-transform ${
-                        isExpanded ? 'rotate-180' : ''
-                      }`}
+                      className={`text-muted-foreground flex-shrink-0 mt-1 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                     />
-
                     <div className="flex-1 min-w-0 text-left">
-                      {/* URL and Method */}
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <MethodBadge method={run.method} size="sm" />
                         <code className="text-sm font-mono text-accent bg-background/50 px-2 py-1 rounded truncate">
-                          {run.url}
+                          {run.api_url}
                         </code>
                       </div>
-
-                      {/* Timestamp */}
-                      <div className="text-sm text-muted-foreground mb-3">{formatDate(run.timestamp)}</div>
-
-                      {/* Pass Rate Progress Bar */}
+                      <div className="text-sm text-muted-foreground mb-3">{formatDate(run.created_at)}</div>
                       <div className="flex items-center gap-3">
                         <div className="flex-1 min-w-0 bg-background rounded-full h-2 overflow-hidden">
                           <div
@@ -97,7 +114,6 @@ export function HistoryPage() {
                       </div>
                     </div>
                   </div>
-
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <div className="text-right">
                       <div className="text-lg font-bold text-green-400">{run.passed}</div>
@@ -110,39 +126,24 @@ export function HistoryPage() {
                   </div>
                 </button>
 
-                {/* Expanded Details */}
                 {isExpanded && (
-                  <div className="border-t border-border px-4 py-4 bg-background/50 space-y-4">
-                    {/* Description */}
-                    {run.description && (
-                      <div>
-                        <div className="text-sm font-semibold text-muted-foreground mb-2">Description</div>
-                        <p className="text-sm text-foreground/80">{run.description}</p>
-                      </div>
-                    )}
-
-                    {/* Test Results */}
-                    {run.results.length > 0 && (
-                      <div>
-                        <div className="text-sm font-semibold text-muted-foreground mb-3">Test Results</div>
-                        <div className="space-y-3 max-h-64 overflow-y-auto">
-                          {run.results.map((result) => (
-                            <TestResultCard key={result.testId} result={result} />
-                          ))}
+                  <div className="border-t border-border px-4 py-4 bg-background/50 space-y-3">
+                    <div className="text-sm font-semibold text-muted-foreground mb-2">Test Cases</div>
+                    {run.test_cases.map((tc: any) => (
+                      <div key={tc.id} className="flex items-center justify-between p-3 bg-background rounded-lg border border-border">
+                        <div>
+                          <div className="text-sm font-semibold text-foreground">{tc.name}</div>
+                          <div className="text-xs text-muted-foreground">{tc.description}</div>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs font-mono">
+                          <span className="text-muted-foreground">Expected: {tc.expected_status}</span>
+                          <span className="text-muted-foreground">Actual: {tc.actual_status ?? '—'}</span>
+                          {tc.passed === true && <span className="text-green-400 font-bold">PASSED</span>}
+                          {tc.passed === false && <span className="text-red-400 font-bold">FAILED</span>}
+                          {tc.passed === null && <span className="text-yellow-400 font-bold">NOT RUN</span>}
                         </div>
                       </div>
-                    )}
-
-                    {/* Delete Button */}
-                    <div className="pt-4 border-t border-border">
-                      <button
-                        onClick={() => deleteHistoryItem(run.id)}
-                        className="flex items-center gap-2 text-red-400 hover:text-red-300 text-sm font-semibold transition-colors"
-                      >
-                        <Trash2 size={16} />
-                        Delete
-                      </button>
-                    </div>
+                    ))}
                   </div>
                 )}
               </div>
