@@ -24,7 +24,7 @@ def create_user(user: User, authorization: Optional[str] = Header(None)):
     if not user.name or not user.job:
         from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="Missing fields")
-    if len(user.name) > 50:
+    if len(user.name) >= 50:
         from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="Name too long")
     return {"id": 1, "name": user.name, "job": user.job}

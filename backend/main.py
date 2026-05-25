@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import GROQ_API_KEY, SUPABASE_URL, SUPABASE_KEY
 from routers.generate import router as generate_router
 from routers.runner import router as runner_router
+from routers.upload import router as upload_router
 
 app = FastAPI(
     title="API Test Gen",
@@ -21,6 +22,7 @@ app.add_middleware(
 # Include the routers
 app.include_router(generate_router)
 app.include_router(runner_router)
+app.include_router(upload_router)
 
 @app.get("/")
 def root():
