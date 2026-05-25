@@ -90,6 +90,28 @@ Relevant API Documentation:
 Use this documentation to generate more accurate and business-specific test cases.
 """
 
+    if rag_context:
+        test_case_instructions = """
+- Always include happy path and unauthorized request
+- Generate remaining test cases based on business rules from the documentation above
+- Focus on domain-specific scenarios like:
+  * Balance or limit exceeded
+  * Duplicate transaction or ID
+  * Invalid amount or negative values
+  * Daily/monthly limits
+  * Any other rules mentioned in the docs
+- Only use generic cases if no specific business rules are found
+"""
+    else:
+        test_case_instructions = """
+1. Happy path - valid request
+2. Missing required fields
+3. Invalid data types
+4. Unauthorized - no auth header
+5. Edge case - empty strings or zero values
+6. Large input - body with a 50 character string
+"""
+
     prompt = f"""
 You are an expert API testing engineer. Generate exactly 6 test cases for this API endpoint.
 
@@ -106,12 +128,7 @@ Rules:
 - If API documentation is provided above, use it to generate business-specific test cases
 
 Test cases to cover:
-1. Happy path - valid request
-2. Missing required fields (expect 400 or 422)
-3. Invalid data types
-4. Unauthorized - no auth header
-5. Edge case - empty strings or zero values
-6. Large input - body with a 50 character string
+{test_case_instructions}
 
 JSON format:
 [
