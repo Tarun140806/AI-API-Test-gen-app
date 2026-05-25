@@ -223,6 +223,7 @@ backend/__pycache__/
 backend/.env
 backend/*.pyc
 backend/.pytest_cache/
+backend/chroma_db/
 
 # Frontend
 frontend/node_modules/
